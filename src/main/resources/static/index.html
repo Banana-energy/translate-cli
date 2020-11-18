@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<input id="upload" name="upload" type="file"/>
+<select id="lang" name="">
+  <option value="zh">中文</option>
+  <option value="en">英语</option>
+</select>
+<button id="export">导出</button>
+</body>
+<script type="text/javascript">
+  window.onload = function () {
+    /**
+     * 上传函数
+     * @param fileInput DOM对象
+     * @param callback 回调函数
+     */
+    const getFileContent = function (fileInput, callback) {
+      if (fileInput.files && fileInput.files.length > 0 && fileInput.files[0].size > 0) {
+        const file = fileInput.files[0]
+        if (window.FileReader) {
+          const reader = new FileReader()
+          reader.onloadend = function (evt) {
+            if (evt.target.readyState === FileReader.DONE) {
+              callback(evt.target.result)
+            }
+          }
+          reader.readAsText(file)
+        }
+      }
+    }
+
+    /**
+     * upload内容变化时载入内容
+     */
+    document.getElementById('upload').onchange = function () {
+      tempKey = {}
+      tempRes = {}
+      document.getElementById('content')
+      const reg = /module.exports = /g
+      const regExp = /export default/g
+      const select = document.getElementById('lang')
+      const index = select.selectedIndex
+      const lang = select.options[index].value
+      getFileContent(this, function (str) {
+        str = str.replace(reg, '').replace(regExp, '')
+        let obj = eval("(" + str + ")")
+        const json = JSON.stringify(obj)
+        obj = JSON.parse(json)
+        map(obj)
+        tempRes = encodeURIComponent(JSON.stringify(tempRes))
+        const xmlHttp = new XMLHttpRequest()
+        xmlHttp.open("POST", "/user/load", true)
+        xmlHttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xmlHttp.send("json=" + tempRes + "&lang=" + lang + "&name=zh.json")
+      });
+    }
+    let tempKey, tempRes = {}
+    function map(obj, str = '') {
+      const keys = Object.keys(obj)
+      for (let i = 0; i < keys.length; i++) {
+        let key = str + keys[i] + '.'
+        if (typeof obj[keys[i]] === 'object') {
+          map(obj[keys[i]], key)
+        } else {
+          tempKey = key.substr(0, key.length - 1)
+          tempRes[tempKey] = obj[keys[i]]
+        }
+      }
+    }
+  }
+
+  document.getElementById("export").onclick = () => {
+    exportItem()
+  }
+
+  function exportItem() {
+    let url = '/user/export?name=zh.json'
+    let xhr = new XMLHttpRequest()
+    xhr.open('GET', url, true);
+    xhr.responseType = "blob"
+    xhr.onload = function () {
+      if (this.status === 200) {
+        let blob = this.response
+        let reader = new FileReader()
+        reader.readAsDataURL(blob)
+        reader.onload = function (e) {
+          // 转换完成，创建一个a标签用于下载
+          let a = document.createElement('a')
+          a.download = 'item.xls'
+          a.href = e.target.result.toString()
+          document.body.append(a)   // 修复firefox中无法触发click
+          a.click()
+          document.body.removeChild(a)
+        }
+      }
+    }
+    xhr.send()
+  }
+
+  function exportJS() {
+    let url = '/user/exportJS?name=zh.json'
+    let xhr = new XMLHttpRequest()
+    xhr.open('GET', url, true);
+    xhr.onload = function () {
+      if (this.status === 200) {
+        const list = JSON.parse(this.response).data
+        const js = {}
+        for (let i = 0; i < list.length; i++) {
+          const keys = list[i].hashKey.split('.')
+          const obj = getObj(keys, list[i].zh)
+          for (const objKey in obj) {
+            if (obj.hasOwnProperty(objKey)) {
+              if (js[objKey] && Object.keys(js[objKey]).length !== 0) {
+                // js[objKey]是对象且里面已经有值
+                js[objKey] = merge(js[objKey], obj[objKey])
+              } else {
+                js[objKey] = obj[objKey]
+              }
+            }
+          }
+        }
+        let a = document.createElement('a')
+        a.download = 'translate.json'
+        const blob = new Blob([JSON.stringify(js)])
+        a.href = URL.createObjectURL(blob)
+        document.body.append(a)   // 修复firefox中无法触发click
+        a.click()
+        document.body.removeChild(a)
+      }
+    }
+    xhr.send()
+  }
+
+  function merge(def, obj) {
+    if (!obj) {
+      return def;
+    } else if (!def) {
+      return obj;
+    }
+    for (const i in obj) {
+      if (obj.hasOwnProperty(i)) {
+        // if its an object
+        if (obj[i] != null && obj[i].constructor === Object) {
+          def[i] = merge(def[i], obj[i]);
+        }
+        // if its an array, simple values need to be joined. Object values need to be re-merged.
+        else if (obj[i] != null && (obj[i] instanceof Array) && obj[i].length > 0) {
+          // test to see if the first element is an object or not so we know the type of array we're dealing with.
+          if (obj[i][0].constructor === Object) {
+            const newObjs = [];
+            // create an index of all the existing object IDs for quick access. There is no way to know how many items will be in the arrays.
+            const objIds = {};
+            for (let x = 0, l = def[i].length; x < l; x++) {
+              objIds[def[i][x].id] = x;
+            }
+            // now walk through the objects in the new array
+            // if the ID exists, then merge the objects.
+            // if the ID does not exist, push to the end of the def array
+            for (let x = 0, l = obj[i].length; x < l; x++) {
+              const newObj = obj[i][x];
+              if (objIds[newObj.id] !== undefined) {
+                def[i][x] = merge(def[i][x], newObj);
+              } else {
+                newObjs.push(newObj);
+              }
+            }
+            for (let x = 0, l = newObjs.length; x < l; x++) {
+              def[i].push(newObjs[x]);
+            }
+          } else {
+            for (let x = 0; x < obj[i].length; x++) {
+              const idxObj = obj[i][x];
+              if (def[i].indexOf(idxObj) === -1) {
+                def[i].push(idxObj);
+              }
+            }
+          }
+        } else {
+          if (isNaN(obj[i]) || i.indexOf('_key') > -1) {
+            def[i] = obj[i];
+          } else {
+            def[i] += obj[i];
+          }
+        }
+      }
+    }
+    return def;
+  }
+
+  function getObj(arr, value, json = {}) {
+    if (arr.length !== 1) {
+      const obj = {}
+      obj[arr[arr.length - 1]] = value
+      arr.pop()
+      const temp = {}
+      Object.assign(temp, obj)
+      getObj(arr, temp, json)
+    } else {
+      json[arr[arr.length - 1]] = value
+    }
+    return json
+  }
+
+  // exportJS()
+</script>
+</html>
