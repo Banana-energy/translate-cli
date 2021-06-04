@@ -68,12 +68,12 @@ service.interceptors.response.use(
         // })
       } else {
         Message.error({
-          content: res.message || 'Error',
+          content: res.rtnMessage || 'Error',
           background: true,
           duration: 5
         })
       }
-      return Promise.reject(new Error(res.msg || 'Error'))
+      return Promise.reject(new Error(res.rtnMessage || 'Error'))
     } else {
       return res
     }

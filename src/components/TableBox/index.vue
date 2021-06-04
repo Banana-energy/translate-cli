@@ -48,6 +48,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "./src/assets/styles/media_query";
 .table-card {
   margin: 24px;
 
@@ -56,7 +57,7 @@ export default {
     justify-content: space-between;
     align-items: center;
     .title {
-      font-size: 18px;
+      font-size: 24px;
       font-weight: bold;
     }
   }
@@ -73,8 +74,12 @@ export default {
       align-items: center;
       .text {
         flex-grow: 1;
-        font-size: 18px;
+        font-size: 24px;
         font-weight: bold;
+      }
+      @include in-middle-device {
+        flex-direction: column;
+        align-items: flex-start;
       }
     }
   }

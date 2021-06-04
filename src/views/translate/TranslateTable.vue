@@ -1,53 +1,87 @@
 <template>
-  <table-box>
-    <template v-slot:header>
-      <Button type="primary" icon="ios-search-outline" @click="handleSearch">
-        搜索
-      </Button>
-    </template>
-    <template v-slot:search>
-      <Form ref="search-form" label-position="left" :model="listQuery" :label-width="55" inline>
-        <FormItem label="关键字">
-          <Input v-model="listQuery.words" clearable class="" type="text" placeholder="请输入关键字" />
-        </FormItem>
-      </Form>
-    </template>
-    <template slot="button">
-      <Row :gutter="16">
-        <Button icon="md-add">添加</Button>
-        <Button icon="primary">导出Excel</Button>
-      </Row>
-    </template>
-    <template v-slot:list>
-      <Table :loading="loading" :columns="columns" :data="list" border highlight-row>
-        <template slot="hashKey" slot-scope="{ row }">
-          {{ row.hashKey }}
-        </template>
-        <template slot="action" slot-scope="{ row }">
-          <Button type="text" size="small" @click="update(row)">编辑</Button>
-          <Button type="text" size="small" @click="remove(row)">删除</Button>
-        </template>
-      </Table>
-      <div class="list-page">
-        <Page
-          :total="total"
-          :current.sync="listQuery.page"
-          size="small"
-          c
-          show-total
-          show-elevator
-          @on-change="getList"
-        />
-      </div>
-    </template>
-  </table-box>
+  <div>
+    <table-box>
+      <template v-slot:header>
+        <Button type="primary" icon="ios-search-outline" @click="handleSearch">
+          搜索
+        </Button>
+      </template>
+      <template v-slot:search>
+        <Form ref="search-form" label-position="left" :model="listQuery" :label-width="55" inline>
+          <FormItem label="关键字">
+            <Input
+              v-model="listQuery.words"
+              clearable
+              type="text"
+              onkeypress="if(event.keyCode === 13) return false"
+              placeholder="请输入关键字"
+              @keyup.enter.native="handleSearch"
+            />
+          </FormItem>
+        </Form>
+      </template>
+      <template slot="button">
+        <div class="button-group">
+          <Button icon="ios-add" @click="update({})">添加单词</Button>
+          <Button icon="ios-add-circle-outline" style="margin-left: 10px;" @click="append">添加语言</Button>
+          <Button
+            :loading="exportLoading"
+            style="margin-left: 10px;"
+            icon="ios-cloud-download-outline"
+            @click="exportExcel"
+          >
+            导出Excel
+          </Button>
+        </div>
+      </template>
+      <template v-slot:list>
+        <div ref="translateTable">
+          <Table :loading="loading" :columns="columns" :data="list" border highlight-row>
+            <template slot="hashKey" slot-scope="{ row }">
+              {{ row.hashKey }}
+            </template>
+            <template slot="action" slot-scope="{ row }">
+              <Button type="text" size="small" @click="update(row)">编辑</Button>
+              <Poptip
+                confirm
+                title="确认删除这条记录吗？"
+                placement="bottom"
+                @on-ok="handleRemove(row)"
+                @on-cancel="cancel"
+              >
+                <Button type="text" size="small">删除</Button>
+              </Poptip>
+            </template>
+          </Table>
+          <div class="list-page">
+            <Page
+              :total="total"
+              :current.sync="listQuery.page"
+              size="small"
+              show-total
+              show-elevator
+              @on-change="getList(false)"
+            />
+          </div>
+        </div>
+      </template>
+    </table-box>
+    <EditModal :row="rowData" :show-modal.sync="showModal" @refurbish="$emit('refresh')" @refresh="getList" />
+    <AppendModal :show-modal.sync="appendModal" @refresh="getCols" />
+  </div>
 </template>
 
 <script>
-import { getColumns, getTranslateList } from '@/api/translate/translate'
+import { deleteWords, exportToExcel, getColumns, getTranslateList } from '@/api/translate/translate'
+import EditModal from '@/views/translate/EditModal'
+import AppendModal from '@/views/translate/AppendModal'
 
 export default {
   name: 'TranslateTable',
+  components: {
+    EditModal,
+    AppendModal
+  },
   props: {
     name: {
       type: String,
@@ -60,10 +94,15 @@ export default {
       columns: [],
       listQuery: {
         page: 1,
-        words: ''
+        words: '',
+        name: ''
       },
-      loading: true,
-      total: 0
+      loading: false,
+      total: 0,
+      exportLoading: false,
+      showModal: false,
+      appendModal: false,
+      rowData: {}
     }
   },
   watch: {
@@ -75,7 +114,7 @@ export default {
   },
   mounted() {
     this.getCols()
-    this.getList()
+    this.getList(false)
   },
   methods: {
     async getCols() {
@@ -104,23 +143,50 @@ export default {
         align: 'center'
       })
     },
-    async getList() {
+    async getList(scroll = true) {
       this.loading = true
-      const { table, total } = await getTranslateList(this.listQuery)
-      this.list = table
-      this.total = total
-      this.loading = false
+      try {
+        const { table, total } = await getTranslateList(this.listQuery)
+        this.list = table
+        this.total = total
+      } finally {
+        this.loading = false
+      }
+      if (scroll) {
+        const el = this.$refs.translateTable
+        el.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' })
+      }
     },
-    update(row) {
-      console.log(row)
+    update(row = {}) {
+      this.rowData = row
+      this.showModal = true
     },
-    remove(row) {
-
+    async handleRemove(row) {
+      const { rtnMessage } = await deleteWords(row)
+      this.$Message.success({
+        content: rtnMessage,
+        duration: 5,
+        background: true
+      })
+      await this.getList()
+    },
+    cancel() {
+    },
+    append() {
+      this.appendModal = true
     },
     handleSearch() {
       this.listQuery.page = 1
       this.listQuery.name = ''
       this.getList()
+    },
+    async exportExcel() {
+      this.exportLoading = true
+      try {
+        await exportToExcel(this.listQuery)
+      } finally {
+        this.exportLoading = false
+      }
     }
   }
 }
@@ -149,7 +215,26 @@ export default {
       &:focus {
         box-shadow: none
       }
+
+      span {
+        &:hover {
+          text-decoration: underline;
+        }
+      }
     }
   }
 }
+
+::v-deep .ivu-poptip-popper {
+  left: 23px !important;
+}
+
+::v-deep .ivu-poptip-confirm .ivu-poptip-popper {
+  max-width: 180px;
+}
+
+::v-deep .ivu-poptip-body {
+  display: flex;
+}
+
 </style>

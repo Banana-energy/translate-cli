@@ -1,0 +1,40 @@
+
+@mixin small-device {
+  @media only screen and (max-width: 480px) {
+    @content;
+  }
+}
+@mixin in-small-device {
+  @media only screen and (max-width: 480px) {
+    & {
+      @content;
+    }
+  }
+}
+@mixin middle-device {
+  @media only screen and (max-width: 768px) {
+    @content;
+  }
+}
+@mixin in-middle-device {
+  @media only screen and (max-width: 768px) {
+    & {
+      @content;
+    }
+  }
+}
+@mixin small-pc {
+  @media only screen and (max-width: 1280px) {
+    @content;
+  }
+}
+@mixin in-small-pc {
+  @media only screen and (max-width: 1280px) {
+    & {
+      @content;
+    }
+  }
+}
+@function pxToRem($px) {
+  @return $px / 20 * 1rem;
+}

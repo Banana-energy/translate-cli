@@ -20,5 +20,22 @@ module.exports = {
         '@': resolve('src')
       }
     }
+  },
+  css: {
+    loaderOptions: {
+      postcss: {
+        plugins: [
+          require('postcss-plugin-px2rem')({
+            rootValue: 25.6,
+            mobileRootValue: 21.33,
+            unitPrecision: 5,
+            exclude: /node_modules/i,
+            replace: true,
+            mediaQuery: false,
+            minPixelValue: 3
+          })
+        ]
+      }
+    }
   }
 }
