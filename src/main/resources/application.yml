@@ -24,4 +24,4 @@ platform:
   key: 7e8968fe8fe6b4ae9f724814d148626b
 server:
   port: 8001
-  max-http-header-size: 102400
+  max-http-header-size: 1024000

@@ -1,5 +1,7 @@
 package com.tuliu.translate.controller;
 
+import com.tuliu.translate.common.ResultCode;
+import com.tuliu.translate.entity.tuliuDocument;
 import com.tuliu.translate.entity.tuliuTranslate;
 import com.tuliu.translate.service.UserService;
 import com.tuliu.translate.vo.Response;
@@ -8,6 +10,9 @@ import jxl.write.Label;
 import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -16,9 +21,7 @@ import java.beans.PropertyDescriptor;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,17 +49,17 @@ public class UserController {
   }
 
   @GetMapping({"/getDocument"})
-  public Response<List<String>> getDocument() {
-    return this.userService.getDocument();
+  public Response<List<tuliuDocument>> getDocument(String docName) {
+    return this.userService.getDocument(docName);
   }
 
   @PostMapping({"/load"})
-  public Response<tuliuTranslate> load(@RequestParam(value = "json", defaultValue = "{}") String json, String lang, String name) throws IOException, IntrospectionException, InvocationTargetException, IllegalAccessException {
+  public Response<tuliuTranslate> load(@RequestParam(value = "json", defaultValue = "{}") String json, String lang, String name) {
     return this.userService.load(json, lang, name);
   }
 
   @GetMapping({"/update"})
-  public Response<tuliuTranslate> update(String name, String key, String value, String lang) throws IntrospectionException, InvocationTargetException, IllegalAccessException {
+  public Response<tuliuTranslate> update(String name, String key, String value, String lang) {
     return this.userService.update(name, key, value, lang);
   }
 
@@ -70,8 +73,8 @@ public class UserController {
   }
 
   @GetMapping({"/add"})
-  public Response<tuliuTranslate> add(String name, String lang, String words, String translateWords) throws NoSuchAlgorithmException, IntrospectionException, InvocationTargetException, IllegalAccessException {
-    return this.userService.add(name, lang, words, translateWords);
+  public Response<tuliuTranslate> add(String name, String lang, String words, String value) {
+    return this.userService.add(name, lang, words, value);
   }
 
   @GetMapping({"append"})
@@ -81,12 +84,17 @@ public class UserController {
 
   @GetMapping({"getColumn"})
   public Response<List<String>> getColumn() {
-    List<String> cols = this.userService.getColumn();
-    return new Response<>(cols);
+    try {
+      List<String> cols = this.userService.getColumn();
+      return new Response<>(cols);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return new Response<>(ResultCode.FAIL, "服务器异常！");
+    }
   }
 
   @GetMapping({"export"})
-  public ByteArrayResource export(String name) {
+  public ResponseEntity<ByteArrayResource> export(String name) {
     byte[] result = null;
     ByteArrayOutputStream byteArrayOutputStream = null;
     WritableWorkbook writableWorkbook = null;
@@ -128,27 +136,41 @@ public class UserController {
     if (result == null) {
       result = new byte[0];
     }
-    return new ByteArrayResource(result);
+    HttpHeaders headers = new HttpHeaders();
+    headers.add(HttpHeaders.CONTENT_TYPE, "application/vnd.ms-excel;charset=utf-8");
+    return new ResponseEntity<>(new ByteArrayResource(result), headers, HttpStatus.OK);
   }
 
   @GetMapping({"/exportJS"})
   public Response<List<tuliuTranslate>> exportJS(String name) {
-    List<tuliuTranslate> table = this.userService.getTable(name);
-//    List<JSONObject> list = new ArrayList<>();
-//    for (tuliuTranslate row : table) {
-//      String[] keys = row.getHashKey().split("\\.");
-//      JSONObject temp = new JSONObject();
-//      for (int i = keys.length - 1; i >= 0; i--) {
-//        if (i == keys.length - 1) {
-//          temp.put(keys[i], row.getZh());
-//        } else {
-//          temp.put(keys[i], temp);
-//          temp.remove(keys[i + 1]);
-//        }
-//      }
-//      list.add(temp);
-//    }
-    return new Response<>(table);
+    try {
+      List<tuliuTranslate> table = this.userService.getTable(name);
+      return new Response<>(table);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return new Response<>(ResultCode.FAIL, "服务器异常！");
+    }
   }
 
+  @GetMapping({"/getLang"})
+  public Response<List<String>> getLang() {
+    try {
+      List<String> cols = this.userService.getColumn();
+      cols = cols.subList(3, cols.size());
+      return new Response<>(cols);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return new Response<>(ResultCode.FAIL, "服务器异常！");
+    }
+  }
+
+  @PostMapping({"/deleteDocument"})
+  public Response<tuliuDocument> delete(String name) {
+    return this.userService.delete(name);
+  }
+
+  @GetMapping({"/deleteWords"})
+  public Response<tuliuTranslate> deleteWords(String name, String hashKey) {
+    return this.userService.deleteWords(name, hashKey);
+  }
 }

@@ -79,7 +79,7 @@
   }
 
   function exportItem() {
-    let url = '/user/export?name=zh.json'
+    let url = '/user/export?name=后台前端翻译'
     let xhr = new XMLHttpRequest()
     xhr.open('GET', url, true);
     xhr.responseType = "blob"
@@ -103,12 +103,13 @@
   }
 
   function exportJS() {
-    let url = '/user/exportJS?name=zh.json'
+    let url = '/user/exportJS?name=后台前端翻译'
     let xhr = new XMLHttpRequest()
     xhr.open('GET', url, true);
     xhr.onload = function () {
       if (this.status === 200) {
         const list = JSON.parse(this.response).data
+        console.log(list)
         const js = {}
         for (let i = 0; i < list.length; i++) {
           const keys = list[i].hashKey.split('.')
@@ -206,6 +207,6 @@
     return json
   }
 
-  // exportJS()
+  exportJS()
 </script>
 </html>

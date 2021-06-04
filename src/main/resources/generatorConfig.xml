@@ -3,14 +3,16 @@
     PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
     "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
 <generatorConfiguration>
-  <context id="DB2Tables"  targetRuntime="MyBatis3">
+  <context id="DB2Tables" targetRuntime="MyBatis3">
     <commentGenerator>
       <property name="suppressDate" value="true"/>
       <!-- 是否去除自动生成的注释 true：是 ： false:否 -->
       <property name="suppressAllComments" value="true"/>
     </commentGenerator>
     <!--数据库链接URL，用户名、密码 -->
-    <jdbcConnection driverClass="com.mysql.jdbc.Driver" connectionURL="jdbc:mysql://localhost:3306/tuliu?characterEncoding=utf8&amp;serverTimezone=UTC" userId="root" password="123456">
+    <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+                    connectionURL="jdbc:mysql://localhost:3306/tuliu?characterEncoding=utf8&amp;serverTimezone=UTC"
+                    userId="root" password="123456">
     </jdbcConnection>
     <javaTypeResolver>
       <property name="forceBigDecimals" value="false"/>
@@ -32,6 +34,7 @@
     <!-- 要生成的表 tableName是数据库中的表名或视图名 domainObjectName是实体类名-->
 
     <table tableName="tuliu_translate" domainObjectName="tuliuTranslate"/>
+    <table tableName="tuliu_document" domainObjectName="tuliuDocument"/>
 
   </context>
 </generatorConfiguration>

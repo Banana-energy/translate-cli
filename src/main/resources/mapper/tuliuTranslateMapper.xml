@@ -8,8 +8,7 @@
     <result column="zh" property="zh" jdbcType="VARCHAR" />
     <result column="en" property="en" jdbcType="VARCHAR" />
     <result column="ru" property="ru" jdbcType="VARCHAR" />
-    <result column="cn" property="cn" jdbcType="VARCHAR" />
-    <result column="test" property="test" jdbcType="VARCHAR" />
+    <result column="addzh" property="addzh" jdbcType="VARCHAR"/>
   </resultMap>
   <sql id="Example_Where_Clause" >
     <where >
@@ -70,7 +69,8 @@
     </where>
   </sql>
   <sql id="Base_Column_List" >
-    id, name, hash_key, zh, en, ru, cn, test
+    id
+    , name, hash_key, zh, en, ru, addzh
   </sql>
   <select id="selectByExample" resultMap="BaseResultMap" parameterType="com.tuliu.translate.entity.tuliuTranslateExample" >
     select
@@ -87,7 +87,7 @@
     </if>
   </select>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
-    select 
+    select
     <include refid="Base_Column_List" />
     from tuliu_translate
     where id = #{id,jdbcType=INTEGER}
@@ -103,12 +103,10 @@
     </if>
   </delete>
   <insert id="insert" parameterType="com.tuliu.translate.entity.tuliuTranslate" >
-    insert into tuliu_translate (id, name, hash_key, 
-      zh, en, ru, cn, 
-      test)
-    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{hashKey,jdbcType=VARCHAR}, 
-      #{zh,jdbcType=VARCHAR}, #{en,jdbcType=VARCHAR}, #{ru,jdbcType=VARCHAR}, #{cn,jdbcType=VARCHAR}, 
-      #{test,jdbcType=VARCHAR})
+    insert into tuliu_translate (id, name, hash_key,
+                                 zh, en, ru, addzh)
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{hashKey,jdbcType=VARCHAR},
+            #{zh,jdbcType=VARCHAR}, #{en,jdbcType=VARCHAR}, #{ru,jdbcType=VARCHAR}, #{addzh,jdbcType=VARCHAR})
   </insert>
   <insert id="insertSelective" parameterType="com.tuliu.translate.entity.tuliuTranslate" >
     insert into tuliu_translate
@@ -122,20 +120,17 @@
       <if test="hashKey != null" >
         hash_key,
       </if>
-      <if test="zh != null" >
+      <if test="zh != null">
         zh,
       </if>
-      <if test="en != null" >
+      <if test="en != null">
         en,
       </if>
-      <if test="ru != null" >
+      <if test="ru != null">
         ru,
       </if>
-      <if test="cn != null" >
-        cn,
-      </if>
-      <if test="test != null" >
-        test,
+      <if test="addzh != null">
+        addzh,
       </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides="," >
@@ -148,20 +143,17 @@
       <if test="hashKey != null" >
         #{hashKey,jdbcType=VARCHAR},
       </if>
-      <if test="zh != null" >
+      <if test="zh != null">
         #{zh,jdbcType=VARCHAR},
       </if>
-      <if test="en != null" >
+      <if test="en != null">
         #{en,jdbcType=VARCHAR},
       </if>
-      <if test="ru != null" >
+      <if test="ru != null">
         #{ru,jdbcType=VARCHAR},
       </if>
-      <if test="cn != null" >
-        #{cn,jdbcType=VARCHAR},
-      </if>
-      <if test="test != null" >
-        #{test,jdbcType=VARCHAR},
+      <if test="addzh != null">
+        #{addzh,jdbcType=VARCHAR},
       </if>
     </trim>
   </insert>
@@ -183,20 +175,17 @@
       <if test="record.hashKey != null" >
         hash_key = #{record.hashKey,jdbcType=VARCHAR},
       </if>
-      <if test="record.zh != null" >
+      <if test="record.zh != null">
         zh = #{record.zh,jdbcType=VARCHAR},
       </if>
-      <if test="record.en != null" >
+      <if test="record.en != null">
         en = #{record.en,jdbcType=VARCHAR},
       </if>
-      <if test="record.ru != null" >
+      <if test="record.ru != null">
         ru = #{record.ru,jdbcType=VARCHAR},
       </if>
-      <if test="record.cn != null" >
-        cn = #{record.cn,jdbcType=VARCHAR},
-      </if>
-      <if test="record.test != null" >
-        test = #{record.test,jdbcType=VARCHAR},
+      <if test="record.addzh != null">
+        addzh = #{record.addzh,jdbcType=VARCHAR},
       </if>
     </set>
     <if test="_parameter != null" >
@@ -206,13 +195,12 @@
   <update id="updateByExample" parameterType="map" >
     update tuliu_translate
     set id = #{record.id,jdbcType=INTEGER},
-      name = #{record.name,jdbcType=VARCHAR},
-      hash_key = #{record.hashKey,jdbcType=VARCHAR},
-      zh = #{record.zh,jdbcType=VARCHAR},
-      en = #{record.en,jdbcType=VARCHAR},
-      ru = #{record.ru,jdbcType=VARCHAR},
-      cn = #{record.cn,jdbcType=VARCHAR},
-      test = #{record.test,jdbcType=VARCHAR}
+    name = #{record.name,jdbcType=VARCHAR},
+    hash_key = #{record.hashKey,jdbcType=VARCHAR},
+    zh = #{record.zh,jdbcType=VARCHAR},
+    en = #{record.en,jdbcType=VARCHAR},
+    ru = #{record.ru,jdbcType=VARCHAR},
+    addzh = #{record.addzh,jdbcType=VARCHAR}
     <if test="_parameter != null" >
       <include refid="Update_By_Example_Where_Clause" />
     </if>
@@ -226,33 +214,29 @@
       <if test="hashKey != null" >
         hash_key = #{hashKey,jdbcType=VARCHAR},
       </if>
-      <if test="zh != null" >
+      <if test="zh != null">
         zh = #{zh,jdbcType=VARCHAR},
       </if>
-      <if test="en != null" >
+      <if test="en != null">
         en = #{en,jdbcType=VARCHAR},
       </if>
-      <if test="ru != null" >
+      <if test="ru != null">
         ru = #{ru,jdbcType=VARCHAR},
       </if>
-      <if test="cn != null" >
-        cn = #{cn,jdbcType=VARCHAR},
-      </if>
-      <if test="test != null" >
-        test = #{test,jdbcType=VARCHAR},
+      <if test="addzh != null">
+        addzh = #{addzh,jdbcType=VARCHAR},
       </if>
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.tuliu.translate.entity.tuliuTranslate" >
     update tuliu_translate
-    set name = #{name,jdbcType=VARCHAR},
-      hash_key = #{hashKey,jdbcType=VARCHAR},
-      zh = #{zh,jdbcType=VARCHAR},
-      en = #{en,jdbcType=VARCHAR},
-      ru = #{ru,jdbcType=VARCHAR},
-      cn = #{cn,jdbcType=VARCHAR},
-      test = #{test,jdbcType=VARCHAR}
+    set name     = #{name,jdbcType=VARCHAR},
+        hash_key = #{hashKey,jdbcType=VARCHAR},
+        zh       = #{zh,jdbcType=VARCHAR},
+        en       = #{en,jdbcType=VARCHAR},
+        ru       = #{ru,jdbcType=VARCHAR},
+        addzh    = #{addzh,jdbcType=VARCHAR}
     where id = #{id,jdbcType=INTEGER}
   </update>
 </mapper>
